@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f1">
+    <title>Your bag | Forma Electronics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: siteHeader}"></div>
+<main class="page-wrap inner-page">
+    <a class="back-link" th:href="@{/}"><i data-lucide="arrow-left" aria-hidden="true"></i> Keep browsing</a>
+    <div class="page-heading-row">
+        <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> YOUR PICKS, ALL IN ONE PLACE</p>
+            <h1>Your bag<span class="heading-count" th:text="'(' + ${cartCount} + ')'">(0)</span></h1>
+        </div>
+        <p class="heading-aside" th:if="${!cartLines.isEmpty()}">Good choices. We saved them for you.</p>
+    </div>
+
+    <div class="empty-cart" th:if="${cartLines.isEmpty()}">
+        <span class="empty-icon"><i data-lucide="shopping-bag" aria-hidden="true"></i></span>
+        <h2>Your bag is taking a breather.</h2>
+        <p>When something catches your eye, it’ll be right here.</p>
+        <a class="button button-dark" th:href="@{/}">Explore the collection <i data-lucide="arrow-right" aria-hidden="true"></i></a>
+    </div>
+
+    <div class="cart-layout" th:if="${!cartLines.isEmpty()}">
+        <section class="cart-items" aria-label="Items in your bag">
+            <article class="cart-item" th:each="line : ${cartLines}">
+                <img class="cart-thumb" th:src="${line.product.image}" th:alt="${line.product.name}">
+                <div class="cart-product-detail">
+                    <span class="cart-category" th:text="${line.product.category}">Audio</span>
+                    <h2 th:text="${line.product.name}">Studio Headphones</h2>
+                    <p th:text="${line.product.tagline}">Hear every detail.</p>
+                    <div class="cart-actions">
+                        <form class="quantity-form" th:action="@{/cart/items/{id}/quantity(id=${line.product.id})}" method="post">
+                            <label class="sr-only" th:for="${'quantity-' + line.product.id}">Quantity</label>
+                            <button class="quantity-button" type="button" data-step="-1" aria-label="Decrease quantity"><i data-lucide="minus" aria-hidden="true"></i></button>
+                            <input th:id="${'quantity-' + line.product.id}" type="number" name="quantity" min="1" max="99" th:value="${line.quantity}" data-quantity>
+                            <button class="quantity-button" type="button" data-step="1" aria-label="Increase quantity"><i data-lucide="plus" aria-hidden="true"></i></button>
+                        </form>
+                        <form th:action="@{/cart/items/{id}/remove(id=${line.product.id})}" method="post">
+                            <button class="text-button remove-button" type="submit"><i data-lucide="x" aria-hidden="true"></i> Remove</button>
+                        </form>
+                    </div>
+                </div>
+                <strong class="cart-line-price">$<span th:text="${line.lineTotal}">249.00</span></strong>
+            </article>
+        </section>
+
+        <aside class="order-summary">
+            <div class="summary-title-row"><h2>Order summary</h2><span th:text="${cartCount + ' items'}">1 item</span></div>
+            <div class="summary-row"><span>Subtotal</span><strong>$<span th:text="${subtotal}">249.00</span></strong></div>
+            <div class="summary-row"><span>Delivery</span><strong class="free-label">On us</strong></div>
+            <div class="summary-total"><span>Total</span><strong>$<span th:text="${subtotal}">249.00</span></strong></div>
+            <a class="button button-lime checkout-button" th:href="@{/checkout}">Continue to checkout <i data-lucide="arrow-right" aria-hidden="true"></i></a>
+            <p class="secure-note"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Demo checkout · no payment collected</p>
+            <div class="delivery-note"><i data-lucide="package-check" aria-hidden="true"></i><span><strong>Free delivery</strong><small>On every order, no minimum</small></span></div>
+        </aside>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

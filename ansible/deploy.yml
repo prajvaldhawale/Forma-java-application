@@ -1,0 +1,102 @@
+---
+- name: Deploy Forma Electronics to EC2 web hosts
+  hosts: name_web1:name_web2
+  become: true
+  gather_facts: true
+  serial: 1
+
+  vars:
+    app_name: ecom-proj
+    app_user: ecomproj
+    app_directory: /opt/ecom-proj
+    app_port: 8080
+    deployment_artifact: "{{ artifact_path | default(playbook_dir ~ '/../target/ecom-proj-0.1.0-SNAPSHOT.jar') }}"
+
+  tasks:
+    - name: Verify the packaged application exists on the controller
+      ansible.builtin.stat:
+        path: "{{ deployment_artifact }}"
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: application_artifact
+
+    - name: Stop if the application artifact is missing
+      ansible.builtin.assert:
+        that:
+          - application_artifact.stat.exists
+        fail_msg: "Build the application first or pass artifact_path to ansible-playbook."
+      run_once: true
+
+    - name: Refresh apt package metadata
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install Java 21 runtime
+      ansible.builtin.apt:
+        name: openjdk-21-jre-headless
+        state: present
+
+    - name: Create application group
+      ansible.builtin.group:
+        name: "{{ app_user }}"
+        system: true
+        state: present
+
+    - name: Create application user
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        group: "{{ app_user }}"
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+        state: present
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_directory }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0755"
+
+    - name: Copy application JAR
+      ansible.builtin.copy:
+        src: "{{ deployment_artifact }}"
+        dest: "{{ app_directory }}/app.jar"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0644"
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        src: templates/ecom-proj.service.j2
+        dest: /etc/systemd/system/ecom-proj.service
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Enable and restart the application
+      ansible.builtin.systemd_service:
+        name: ecom-proj
+        daemon_reload: true
+        enabled: true
+        state: restarted
+
+    - name: Wait for the application to accept connections
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ app_port }}"
+        delay: 2
+        timeout: 60
+
+    - name: Verify the storefront responds successfully
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ app_port }}/"
+        status_code: 200
+        return_content: false
+      register: storefront_health
+      retries: 6
+      delay: 5
+      until: storefront_health.status == 200

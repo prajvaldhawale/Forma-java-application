@@ -1,0 +1,18 @@
+[Unit]
+Description=Forma Electronics Spring Boot storefront
+After=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_directory }}
+ExecStart=/usr/bin/java -jar {{ app_directory }}/app.jar --server.port={{ app_port }} --server.address=0.0.0.0
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

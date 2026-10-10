@@ -1,0 +1,32 @@
+<header class="site-header" th:fragment="siteHeader">
+    <div class="announcement-bar">
+        <span>GOOD GEAR, BETTER EVERYDAY</span>
+        <span>Complimentary delivery on every order</span>
+        <span>Thoughtful tech since 2014</span>
+    </div>
+    <div class="header-main page-wrap">
+        <a class="brand" th:href="@{/}" aria-label="Forma Electronics home">
+            <span class="brand-mark">f.</span>
+            <span class="brand-name">forma<span class="brand-period">.</span><small>electronics for living</small></span>
+        </a>
+        <form class="header-search" th:action="@{/}" method="get" role="search">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <label class="sr-only" for="site-search">Search products</label>
+            <input id="site-search" type="search" name="q" placeholder="Find your next favorite" th:value="${query}">
+            <button type="submit" aria-label="Search"><i data-lucide="arrow-right" aria-hidden="true"></i></button>
+        </form>
+        <a class="bag-link" th:href="@{/cart}" aria-label="Shopping bag">
+            <i data-lucide="shopping-bag" aria-hidden="true"></i>
+            <span>Bag</span>
+            <span class="bag-count" th:text="${cartCount}">0</span>
+        </a>
+    </div>
+    <nav class="main-nav page-wrap" aria-label="Main navigation">
+        <a th:href="@{/(category='All')}">Shop all</a>
+        <a th:href="@{/(category='Audio')}">Audio</a>
+        <a th:href="@{/(category='Computing')}">Computing</a>
+        <a th:href="@{/(category='Phones')}">Phones</a>
+        <a th:href="@{/(category='Wearables')}">Wearables</a>
+        <span class="nav-note"><span class="status-dot"></span> Curated, not crowded</span>
+    </nav>
+</header>

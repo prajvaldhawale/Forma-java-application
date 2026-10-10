@@ -1,0 +1,64 @@
+name: Build and deploy Forma Electronics
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Test and package
+        run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Configure SSH to deployment controller
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_SSH_PRIVATE_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
+          echo "DEPLOY_USER=${DEPLOY_USER:-ubuntu}" >> "$GITHUB_ENV"
+
+      - name: Bundle deployment files
+        run: |
+          set -eu
+          bundle="$RUNNER_TEMP/ecom-proj-deploy"
+          mkdir -p "$bundle"
+          cp -R ansible "$bundle/ansible"
+          cp target/ecom-proj-0.1.0-SNAPSHOT.jar "$bundle/app.jar"
+          tar -czf "$RUNNER_TEMP/ecom-proj-deploy.tar.gz" -C "$bundle" .
+
+      - name: Upload bundle and deploy with Ansible
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -eu
+          ssh_opts="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes"
+          remote="${DEPLOY_USER}@${DEPLOY_HOST}"
+          bundle="/tmp/ecom-proj-${GITHUB_SHA}"
+          scp $ssh_opts "$RUNNER_TEMP/ecom-proj-deploy.tar.gz" "$remote:/tmp/ecom-proj-deploy.tar.gz"
+          ssh $ssh_opts "$remote" "mkdir -p '$bundle' && tar -xzf /tmp/ecom-proj-deploy.tar.gz -C '$bundle' && ansible-galaxy collection install amazon.aws && ansible-playbook -i '$bundle/ansible/inventory/aws_ec2.yml' '$bundle/ansible/deploy.yml' -e artifact_path='$bundle/app.jar'"

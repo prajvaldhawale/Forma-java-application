@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f1">
+    <title>Checkout | Forma Electronics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: siteHeader}"></div>
+<main class="page-wrap inner-page checkout-page">
+    <a class="back-link" th:href="@{/cart}"><i data-lucide="arrow-left" aria-hidden="true"></i> Back to your bag</a>
+    <div class="page-heading-row">
+        <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> JUST A FEW DETAILS</p>
+            <h1>Let’s make it <span class="heading-light">yours.</span></h1>
+        </div>
+        <p class="heading-aside">This demo checkout doesn’t collect payment.</p>
+    </div>
+
+    <div class="checkout-layout">
+        <section class="checkout-form-panel">
+            <div class="section-heading"><span class="step-number">01</span><div><h2>Delivery details</h2><p>Where should we send your good stuff?</p></div></div>
+            <form class="checkout-form" th:action="@{/checkout}" th:object="${checkoutForm}" method="post">
+                <div class="form-field">
+                    <label for="fullName">Full name</label>
+                    <input id="fullName" type="text" th:field="*{fullName}" autocomplete="name" placeholder="Alex Morgan" required>
+                    <small class="field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Name error</small>
+                </div>
+                <div class="form-field">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" th:field="*{email}" autocomplete="email" placeholder="alex@example.com" required>
+                    <small class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error</small>
+                </div>
+                <div class="form-field">
+                    <label for="address">Street address</label>
+                    <input id="address" type="text" th:field="*{address}" autocomplete="street-address" placeholder="12 Example Street" required>
+                    <small class="field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}">Address error</small>
+                </div>
+                <div class="form-field-row">
+                    <div class="form-field">
+                        <label for="city">City</label>
+                        <input id="city" type="text" th:field="*{city}" autocomplete="address-level2" placeholder="Your city" required>
+                        <small class="field-error" th:if="${#fields.hasErrors('city')}" th:errors="*{city}">City error</small>
+                    </div>
+                    <div class="form-field">
+                        <label for="postalCode">Postal code</label>
+                        <input id="postalCode" type="text" th:field="*{postalCode}" autocomplete="postal-code" placeholder="00000" required>
+                        <small class="field-error" th:if="${#fields.hasErrors('postalCode')}" th:errors="*{postalCode}">Postal code error</small>
+                    </div>
+                </div>
+                <button class="button button-lime place-order-button" type="submit">Place demo order <i data-lucide="arrow-right" aria-hidden="true"></i></button>
+                <p class="form-disclaimer"><i data-lucide="info" aria-hidden="true"></i> No payment details are requested or stored.</p>
+            </form>
+        </section>
+
+        <aside class="order-summary checkout-summary">
+            <div class="summary-title-row"><h2>Your order</h2><a th:href="@{/cart}">Edit bag</a></div>
+            <div class="checkout-line" th:each="line : ${cartLines}">
+                <img th:src="${line.product.image}" th:alt="${line.product.name}">
+                <div><strong th:text="${line.product.name}">Studio Headphones</strong><small th:text="'Qty ' + ${line.quantity}">Qty 1</small></div>
+                <span>$<span th:text="${line.lineTotal}">249.00</span></span>
+            </div>
+            <div class="summary-row checkout-subtotal"><span>Subtotal</span><strong>$<span th:text="${subtotal}">249.00</span></strong></div>
+            <div class="summary-row"><span>Delivery</span><strong class="free-label">On us</strong></div>
+            <div class="summary-total"><span>Total</span><strong>$<span th:text="${subtotal}">249.00</span></strong></div>
+            <p class="secure-note"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Secure demo · no real transaction</p>
+        </aside>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

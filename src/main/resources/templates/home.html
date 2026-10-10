@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f1">
+    <title>Forma Electronics | Good gear for everyday</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: siteHeader}"></div>
+<main>
+    <section class="catalog-intro page-wrap">
+        <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> GOOD TECH, THOUGHTFULLY CHOSEN</p>
+            <h1>Find your <span>everyday favorite.</span></h1>
+            <p class="intro-copy">Useful upgrades, dependable classics, and a few things you didn’t know you needed.</p>
+        </div>
+        <div class="intro-side">
+            <span class="intro-side-number">08</span>
+            <span>carefully picked<br>pieces of tech</span>
+        </div>
+    </section>
+
+    <section class="catalog page-wrap" aria-label="Product catalog">
+        <div class="catalog-toolbar">
+            <div class="category-tabs" aria-label="Filter by category">
+                <a th:each="category : ${categories}"
+                   th:href="@{/(category=${category},q=${query},sort=${selectedSort})}"
+                   th:classappend="${category == selectedCategory ? ' is-active' : ''}"
+                   th:text="${category}">All</a>
+            </div>
+            <form class="sort-form" th:action="@{/}" method="get">
+                <input type="hidden" name="category" th:value="${selectedCategory}">
+                <input type="hidden" name="q" th:value="${query}">
+                <label for="sort-products">Sort</label>
+                <select id="sort-products" name="sort" data-autosubmit>
+                    <option value="featured" th:selected="${selectedSort == 'featured'}">Featured</option>
+                    <option value="price-asc" th:selected="${selectedSort == 'price-asc'}">Price: low to high</option>
+                    <option value="price-desc" th:selected="${selectedSort == 'price-desc'}">Price: high to low</option>
+                    <option value="rating" th:selected="${selectedSort == 'rating'}">Top rated</option>
+                </select>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+            </form>
+        </div>
+
+        <div class="results-line">
+            <h2 th:text="${selectedCategory == 'All' ? 'The good stuff' : selectedCategory}">The good stuff</h2>
+            <span><strong th:text="${productCount}">8</strong> considered picks</span>
+        </div>
+
+        <div class="product-grid" th:if="${!products.isEmpty()}">
+            <article class="product-card" th:each="product, loop : ${products}">
+                <div class="product-image-wrap" th:classappend="${'tone-' + loop.index % 4}">
+                    <a class="product-image-link" th:href="@{/(category=${product.category})}" tabindex="-1" aria-hidden="true">
+                        <img class="product-image" th:src="${product.image}" th:alt="${product.name}" loading="lazy">
+                    </a>
+                    <span class="product-badge" th:text="${product.badge}">BESTSELLER</span>
+                    <span class="image-index" th:text="${#numbers.formatInteger(loop.count, 2)}">01</span>
+                </div>
+                <div class="product-info">
+                    <div class="product-meta">
+                        <span th:text="${product.category}">Audio</span>
+                        <span class="rating"><i data-lucide="star" aria-hidden="true"></i> <span th:text="${product.rating}">4.9</span> <span class="review-count" th:text="'(' + ${product.reviewCount} + ')'">(284)</span></span>
+                    </div>
+                    <h3 th:text="${product.name}">Studio Headphones</h3>
+                    <p class="product-tagline" th:text="${product.tagline}">Hear every detail.</p>
+                    <div class="product-buy-row">
+                        <div class="price-stack">
+                            <span class="product-price">$<span th:text="${product.price}">249.00</span></span>
+                            <span class="original-price">$<span th:text="${product.originalPrice}">299.00</span></span>
+                        </div>
+                        <form th:action="@{/cart/items/{id}(id=${product.id})}" method="post">
+                            <button class="add-button" type="submit" th:attr="aria-label='Add ' + ${product.name} + ' to bag'">
+                                <i data-lucide="plus" aria-hidden="true"></i><span>Add</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="empty-results" th:if="${products.isEmpty()}">
+            <span class="empty-icon"><i data-lucide="search-x" aria-hidden="true"></i></span>
+            <h3>No matches this time.</h3>
+            <p>Try another search or browse the full collection.</p>
+            <a class="button button-dark" th:href="@{/}">See all products</a>
+        </div>
+    </section>
+
+    <section class="service-strip page-wrap">
+        <div><i data-lucide="truck" aria-hidden="true"></i><span><strong>Delivery, on us</strong><small>On every order, always</small></span></div>
+        <div><i data-lucide="rotate-ccw" aria-hidden="true"></i><span><strong>30 days to decide</strong><small>Easy, no-fuss returns</small></span></div>
+        <div><i data-lucide="shield-check" aria-hidden="true"></i><span><strong>Picked to last</strong><small>Quality checked by our team</small></span></div>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>
