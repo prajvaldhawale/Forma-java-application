@@ -71,23 +71,27 @@ Required Files
 Josh.pem
 PEM key is required to SSH into EC2 instances.
 
-Step 1: Install Ansible
-Update packages:
 
-sudo apt update
+Step 1: Install Ansible and Update packages
+  - sudo apt update
+    
 Install Ansible:
 
-sudo apt install ansible -y
+- sudo apt update && sudo apt upgrade -y
+- sudo apt install software-properties-common -y
+- sudo add-apt-repository --yes --update ppa:ansible/ansible
+- sudo apt install ansible -y
+  
 Verify installation:
-
 ansible --version
+
 Why?
 Ansible is the automation tool that connects from the master server to the host servers.
 
 Step 2: Install AWS CLI
-sudo apt install awscli -y
-Verify:
+- sudo apt install awscli -y
 
+Verify:
 aws --version
 Why?
 AWS CLI allows access to AWS services and EC2 information.
@@ -95,12 +99,11 @@ AWS CLI allows access to AWS services and EC2 information.
 Step 3: Configure AWS Credentials
 aws configure
 Provide:
-
-Access Key
-Secret Key
-Region
-Output Format
-Verify credentials:
+  Access Key
+  Secret Key
+  Region
+  Output Format
+  Verify credentials:
 
 aws sts get-caller-identity
 Expected:
@@ -115,38 +118,43 @@ Ansible Dynamic Inventory needs access to AWS APIs.
 Step 4: Install AWS Dynamic Inventory Plugin
 Install collection:
 
-ansible-galaxy collection install amazon.aws
-Verify:
-
-ansible-galaxy collection list | grep amazon.aws
+  - ansible-galaxy collection install amazon.aws
+  Verify:
+  - ansible-galaxy collection list | grep amazon.aws
 Expected:
-
 amazon.aws
 Why?
 Allows Ansible to communicate with AWS EC2.
 
 Step 5: Install Python Dependencies
-pip3 install boto3 botocore
+  - sudo apt install python3-venv -y
+  - python3 -m venv ansible-env
+  - source ansible-env/bin/activate
+  - pip install boto3 botocore docker
+  
 Why?
 AWS inventory plugin uses:
-
 boto3
 botocore
 to query AWS APIs.
 
 Step 6: Configure EC2 Tags
-Master Server
-Name=Ansible-Master
-Role=master
-Environment=dev
-Host Server 1
-Name=Host-1
-Role=web
-Environment=dev
-Host Server 2
-Name=Host-2
-Role=web
-Environment=dev
+# host Server 1
+aws ec2 create-tags \
+--resources i-03effab2e224d5103 \
+--tags \
+Key=Name,Value=Host1 \
+Key=Role,Value=master \
+Key=Environment,Value=dev
+
+# Host Server 2
+aws ec2 create-tags \
+--resources i-0937b9d4030500d6d \
+--tags \
+Key=Name,Value=Host-2 \
+Key=Role,Value=web \
+Key=Environment,Value=dev
+
 Why?
 Tags help Dynamic Inventory filter and group servers.
 
